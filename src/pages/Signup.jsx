@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Lock, User, AlertCircle, ChevronRight, Check, Upload, Image, FileText, MapPin, Car } from "lucide-react";
+import { Lock, User, AlertCircle, ChevronRight, Check, Upload, Image, FileText, MapPin, Car, Eye, EyeOff } from "lucide-react";
 import api from "../api";
 
 export default function Signup({ onLoginSuccess, addToast }) {
@@ -10,6 +10,9 @@ export default function Signup({ onLoginSuccess, addToast }) {
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
+  
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [driverName, setDriverName] = useState("");
   const [dob, setDob] = useState("");
@@ -164,7 +167,10 @@ export default function Signup({ onLoginSuccess, addToast }) {
                 <label className="text-xs font-bold text-slate-700">Password <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"><Lock size={18} /></span>
-                  <input type="password" className="w-full py-2.5 pl-10 pr-4 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-secondary focus:ring-3 focus:ring-blue-500/15 transition-all" placeholder="••••••••" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} required />
+                  <input type={showPassword ? "text" : "password"} className="w-full py-2.5 pl-10 pr-10 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-secondary focus:ring-3 focus:ring-blue-500/15 transition-all" placeholder="••••••••" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} required />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer">
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
               </div>
 
@@ -172,7 +178,10 @@ export default function Signup({ onLoginSuccess, addToast }) {
                 <label className="text-xs font-bold text-slate-700">Confirm Password <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"><Lock size={18} /></span>
-                  <input type="password" className="w-full py-2.5 pl-10 pr-4 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-secondary focus:ring-3 focus:ring-blue-500/15 transition-all" placeholder="••••••••" value={signupConfirmPassword} onChange={(e) => setSignupConfirmPassword(e.target.value)} required />
+                  <input type={showConfirmPassword ? "text" : "password"} className="w-full py-2.5 pl-10 pr-10 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-secondary focus:ring-3 focus:ring-blue-500/15 transition-all" placeholder="••••••••" value={signupConfirmPassword} onChange={(e) => setSignupConfirmPassword(e.target.value)} required />
+                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer">
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
               </div>
 

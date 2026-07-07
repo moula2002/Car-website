@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Lock, User, AlertCircle, MapPin, Star, Shield } from "lucide-react";
+import { Lock, User, AlertCircle, MapPin, Star, Shield, Eye, EyeOff } from "lucide-react";
 import api from "../api";
 
 export default function Login({ onLoginSuccess, addToast }) {
@@ -8,6 +8,7 @@ export default function Login({ onLoginSuccess, addToast }) {
 
   const [loginIdentifier, setLoginIdentifier] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loginError, setLoginError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -99,13 +100,20 @@ export default function Login({ onLoginSuccess, addToast }) {
                     <Lock size={18} />
                   </span>
                   <input
-                    type="password"
-                    className="w-full py-2.5 pl-10 pr-4 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-secondary focus:ring-3 focus:ring-blue-500/15 transition-all"
+                    type={showPassword ? "text" : "password"}
+                    className="w-full py-2.5 pl-10 pr-10 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-secondary focus:ring-3 focus:ring-blue-500/15 transition-all"
                     placeholder="••••••••"
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
               </div>
 
