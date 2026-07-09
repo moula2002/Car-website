@@ -10,25 +10,31 @@ export default function Signup({ onLoginSuccess, addToast }) {
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
-  
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [driverName, setDriverName] = useState("");
   const [dob, setDob] = useState("");
   const [license, setLicense] = useState("");
-  const [panCard, setPanCard] = useState("");
   const [aadhaarCard, setAadhaarCard] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
+  const [upiId, setUpiId] = useState("");
 
   const [vehicleType, setVehicleType] = useState("");
   const [vehicleNumber, setVehicleNumber] = useState("");
 
+  const [dlExpiry, setDlExpiry] = useState("");
+  const [rcExpiry, setRcExpiry] = useState("");
+  const [pucExpiry, setPucExpiry] = useState("");
+  const [insuranceExpiry, setInsuranceExpiry] = useState("");
+
   const [photoPreview, setPhotoPreview] = useState("");
   const [licensePreview, setLicensePreview] = useState("");
-  const [panPreview, setPanPreview] = useState("");
   const [aadhaarPreview, setAadhaarPreview] = useState("");
   const [rcPreview, setRcPreview] = useState("");
+  const [pucPreview, setPucPreview] = useState("");
+  const [insurancePreview, setInsurancePreview] = useState("");
 
   const [signupError, setSignupError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -67,16 +73,16 @@ export default function Signup({ onLoginSuccess, addToast }) {
   const handleSignupStep2Submit = async (e) => {
     e.preventDefault();
     setSignupError("");
-    if (!driverName || !dob || !license || !panCard || !aadhaarCard || !mobileNumber || !vehicleType || !vehicleNumber) {
-      setSignupError("Please fill in all verification text details.");
+    if (!driverName || !dob || !license || !aadhaarCard || !mobileNumber || !vehicleType || !vehicleNumber || !upiId || !dlExpiry || !rcExpiry || !pucExpiry || !insuranceExpiry) {
+      setSignupError("Please fill in all verification text details and expiry dates.");
       return;
     }
     if (!photoPreview) {
       setSignupError("Please upload a Profile Photo.");
       return;
     }
-    if (!licensePreview || !panPreview || !aadhaarPreview || !rcPreview) {
-      setSignupError("Please upload images for all required verification documents.");
+    if (!licensePreview || !aadhaarPreview || !rcPreview || !pucPreview || !insurancePreview) {
+      setSignupError("Please upload images for all required verification documents (DL, Aadhaar, RC, PUC, Insurance).");
       return;
     }
 
@@ -89,14 +95,19 @@ export default function Signup({ onLoginSuccess, addToast }) {
       photo: photoPreview,
       password: signupPassword,
       dob: dob,
-      panCard: panCard,
+      upiId: upiId,
+      dlExpiry: dlExpiry,
+      rcExpiry: rcExpiry,
+      pucExpiry: pucExpiry,
+      insuranceExpiry: insuranceExpiry,
       licenseImage: licensePreview,
-      panImage: panPreview,
       aadhaarImage: aadhaarPreview,
       vehicleDetails: {
         type: vehicleType,
         number: vehicleNumber,
-        rcImage: rcPreview
+        rcImage: rcPreview,
+        pucImage: pucPreview,
+        insuranceImage: insurancePreview
       }
     };
 
@@ -196,7 +207,6 @@ export default function Signup({ onLoginSuccess, addToast }) {
             </form>
           )}
 
-          {/* STEP 2: DRIVER VERIFICATION */}
           {signupStep === 2 && (
             <form onSubmit={handleSignupStep2Submit} className="flex flex-col gap-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -216,7 +226,7 @@ export default function Signup({ onLoginSuccess, addToast }) {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-700">Profile Photo <span className="text-red-500">*</span></label>
+                  <label className="text-xs font-bold text-slate-700">Profile Photo (Selfie) <span className="text-red-500">*</span></label>
                   <div className="flex items-center gap-3">
                     {photoPreview ? (
                       <img src={photoPreview} alt="Profile preview" className="w-10 h-10 rounded-full object-cover border border-slate-200" />
@@ -226,7 +236,7 @@ export default function Signup({ onLoginSuccess, addToast }) {
                       </div>
                     )}
                     <label className="flex items-center gap-1 py-1.5 px-3 border border-slate-200 hover:border-slate-300 rounded-lg text-xs font-bold text-slate-700 bg-white cursor-pointer select-none transition-colors">
-                      <Upload size={14} /> Upload Photo
+                      <Upload size={14} /> Upload Selfie
                       <input type="file" accept="image/*" className="hidden" onChange={(e) => handleFileChange(e, setPhotoPreview)} />
                     </label>
                   </div>
@@ -240,13 +250,32 @@ export default function Signup({ onLoginSuccess, addToast }) {
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-700">PAN Card No. <span className="text-red-500">*</span></label>
-                  <input type="text" className="w-full py-2 px-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-secondary focus:ring-3 focus:ring-blue-500/15 transition-all" placeholder="ABCDE1234F" value={panCard} onChange={(e) => setPanCard(e.target.value)} required />
+                  <label className="text-xs font-bold text-slate-700">Aadhaar Card No. <span className="text-red-500">*</span></label>
+                  <input type="text" className="w-full py-2 px-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-secondary focus:ring-3 focus:ring-blue-500/15 transition-all" placeholder="4820-3948-1029" value={aadhaarCard} onChange={(e) => setAadhaarCard(e.target.value)} required />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-bold text-slate-700">Aadhaar Card No. <span className="text-red-500">*</span></label>
-                  <input type="text" className="w-full py-2 px-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-secondary focus:ring-3 focus:ring-blue-500/15 transition-all" placeholder="4820-3948-1029" value={aadhaarCard} onChange={(e) => setAadhaarCard(e.target.value)} required />
+                  <label className="text-xs font-bold text-slate-700">UPI ID (For payouts) <span className="text-red-500">*</span></label>
+                  <input type="text" className="w-full py-2 px-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-secondary focus:ring-3 focus:ring-blue-500/15 transition-all" placeholder="name@upi" value={upiId} onChange={(e) => setUpiId(e.target.value)} required />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-700">DL Expiry Date <span className="text-red-500">*</span></label>
+                  <input type="date" className="w-full py-2 px-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-secondary focus:ring-3 focus:ring-blue-500/15 transition-all" value={dlExpiry} onChange={(e) => setDlExpiry(e.target.value)} required />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-700">RC Expiry Date <span className="text-red-500">*</span></label>
+                  <input type="date" className="w-full py-2 px-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-secondary focus:ring-3 focus:ring-blue-500/15 transition-all" value={rcExpiry} onChange={(e) => setRcExpiry(e.target.value)} required />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-700">PUC Expiry Date <span className="text-red-500">*</span></label>
+                  <input type="date" className="w-full py-2 px-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-secondary focus:ring-3 focus:ring-blue-500/15 transition-all" value={pucExpiry} onChange={(e) => setPucExpiry(e.target.value)} required />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-700">Insurance Expiry <span className="text-red-500">*</span></label>
+                  <input type="date" className="w-full py-2 px-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-secondary focus:ring-3 focus:ring-blue-500/15 transition-all" value={insuranceExpiry} onChange={(e) => setInsuranceExpiry(e.target.value)} required />
                 </div>
               </div>
 
@@ -269,12 +298,13 @@ export default function Signup({ onLoginSuccess, addToast }) {
 
               <div className="space-y-3">
                 <h4 className="text-xs font-bold text-slate-900 border-b border-slate-100 pb-2">Verification Document Images <span className="text-red-500">*</span></h4>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                   {[
                     { label: "Driving License", preview: licensePreview, setPreview: setLicensePreview },
-                    { label: "PAN Card", preview: panPreview, setPreview: setPanPreview },
                     { label: "Aadhaar Card", preview: aadhaarPreview, setPreview: setAadhaarPreview },
                     { label: "Vehicle RC", preview: rcPreview, setPreview: setRcPreview },
+                    { label: "Vehicle PUC", preview: pucPreview, setPreview: setPucPreview },
+                    { label: "Vehicle Insurance", preview: insurancePreview, setPreview: setInsurancePreview },
                   ].map(({ label, preview, setPreview }) => (
                     <div key={label} className="flex flex-col gap-2">
                       <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</span>

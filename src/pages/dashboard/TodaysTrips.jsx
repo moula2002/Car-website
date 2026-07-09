@@ -1,158 +1,403 @@
 import React, { useState, useEffect } from "react";
-import { MapPin, Phone, Car, Clock, CheckCircle } from "lucide-react";
+import { MapPin, Phone, Car, Clock, CheckCircle, Wallet, AlertCircle, RefreshCw, Navigation, Play, DollarSign, User, QrCode, Coins } from "lucide-react";
 import api from "../../api";
 
 export default function TodaysTrips({ driver }) {
-  const [trips, setTrips] = useState([]);
+  const [availableRides, setAvailableRides] = useState([]);
+  const [activeRide, setActiveRide] = useState(null);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [driverStatus, setDriverStatus] = useState("pending");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [selectedPaymentMode, setSelectedPaymentMode] = useState(null); // 'cash' or 'qr'
 
   useEffect(() => {
-    if (driver?._id) {
-      fetchTodaysTrips();
-    }
-  }, [driver]);
+    fetchDashboardDetails();
+  }, []);
 
-  const fetchTodaysTrips = async () => {
+  const fetchDashboardDetails = async () => {
     setLoading(true);
+    setError("");
+    setSelectedPaymentMode(null); // Reset selection on refresh
     try {
-      const response = await api.get(`/bookings?driver=${driver._id}`);
-      
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
+      // 1. Fetch driver profile stats and my-trips in parallel
+      const [statsRes, myTripsRes] = await Promise.all([
+        api.get("/dashboard/driver-stats"),
+        api.get("/bookings/my-trips")
+      ]);
 
-      // Filter for today's date and Confirmed/Ongoing status on frontend
-      const todaysBookings = response.data.data.filter(trip => {
-        const tripDate = new Date(trip.journeyDate);
-        const isToday = tripDate >= today && tripDate < tomorrow;
-        return isToday && (trip.status === 'Confirmed' || trip.status === 'Ongoing');
-      });
+      const { walletBalance: balance, status } = statsRes.data.data;
+      setWalletBalance(balance);
+      setDriverStatus(status);
 
-      // Sort by earliest time first (rough sort by timeSlot if exact time is not available)
-      setTrips(todaysBookings);
+      // If status is not approved, we don't proceed
+      if (status !== 'approved') {
+        setLoading(false);
+        return;
+      }
+
+      // If wallet balance is less than 2000, we don't fetch rides
+      if (balance < 2000) {
+        setLoading(false);
+        return;
+      }
+
+      const active = myTripsRes.data.data.find(trip => 
+        ['Accepted', 'Arrived', 'Ongoing'].includes(trip.status)
+      );
+
+      if (active) {
+        setActiveRide(active);
+      } else {
+        setActiveRide(null);
+        // 3. If no active ride, fetch available rides
+        const availableRes = await api.get("/bookings/available");
+        setAvailableRides(availableRes.data.data);
+      }
+
     } catch (err) {
-      console.error("Failed to fetch today's trips", err);
+      console.error(err);
+      setError(err.response?.data?.error || "Failed to load rides");
     } finally {
       setLoading(false);
     }
   };
 
-  const updateTripStatus = async (id, newStatus) => {
+  // Accept a ride (Confirm ride)
+  const acceptRide = async (rideId) => {
     try {
-      await api.put(`/bookings/${id}`, { status: newStatus });
-      fetchTodaysTrips();
+      await api.put(`/bookings/${rideId}/accept`);
+      await fetchDashboardDetails();
     } catch (err) {
-      console.error("Failed to update trip status", err);
+      alert(err.response?.data?.error || "Failed to accept ride");
     }
   };
 
+  // Progress ride status
+  const progressRideStatus = async (rideId, nextStatus, paymentMethod = null) => {
+    try {
+      const payload = { status: nextStatus };
+      if (paymentMethod) {
+        payload.paymentMethod = paymentMethod;
+      }
+      await api.put(`/bookings/${rideId}/status`, payload);
+      await fetchDashboardDetails();
+    } catch (err) {
+      alert(err.response?.data?.error || "Failed to update status");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-20 bg-white rounded-3xl border border-slate-100 shadow-sm">
+        <div className="flex flex-col items-center gap-4">
+          <RefreshCw className="animate-spin text-secondary" size={32} />
+          <p className="text-sm font-bold text-slate-500">Loading rides scheduler...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Block if not approved
+  if (driverStatus !== 'approved') {
+    return (
+      <div className="bg-white text-slate-900 rounded-[2.5rem] p-8 sm:p-10 shadow-sm border border-slate-100 text-center space-y-6">
+        <AlertCircle size={48} className="mx-auto text-amber-500" />
+        <h2 className="text-2xl font-black">Account Verification Pending</h2>
+        <p className="text-slate-500 max-w-md mx-auto text-sm">
+          Your account is currently under verification. Once approved by the administrator, you will be able to see and accept available rides.
+        </p>
+      </div>
+    );
+  }
+
+  // Block if wallet balance < 2000
+  if (walletBalance < 2000) {
+    return (
+      <div className="bg-white text-slate-900 rounded-[2.5rem] p-8 sm:p-10 shadow-sm border border-slate-100 text-center space-y-6">
+        <Wallet size={48} className="mx-auto text-rose-500" />
+        <h2 className="text-2xl font-black text-rose-600">Wallet Balance Below Limit</h2>
+        <p className="text-slate-500 max-w-md mx-auto text-sm">
+          You must maintain a minimum wallet balance of <strong>₹2,000</strong> to view or accept rides. 
+          Current Balance: <strong className="text-rose-600">₹{walletBalance}</strong>
+        </p>
+        <p className="text-slate-400 text-xs">
+          Please navigate to the <strong>Ride History & Wallet</strong> tab to submit a recharge request.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white text-slate-900 rounded-[2.5rem] p-6 sm:p-10 space-y-10 shadow-xl border border-slate-100 overflow-hidden relative">
-      {/* Ambient backgrounds */}
-      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[100px] pointer-events-none translate-x-1/2 -translate-y-1/2"></div>
+      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[100px] pointer-events-none translate-x-1/2 -translate-y-1/2" />
       
+      {/* Header */}
       <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-slate-100 pb-6">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 flex items-center gap-3 tracking-tight">
-            <Clock size={32} className="text-secondary" />
-            Today's Assigned Trips
+          <h1 className="text-3xl font-black text-slate-900 flex items-center gap-3 tracking-tight">
+            <Navigation size={32} className="text-secondary" />
+            Ride Dispatch
           </h1>
-          <p className="text-slate-500 font-medium mt-2 text-sm sm:text-base">Manage your active schedule and upcoming pickups.</p>
+          <p className="text-slate-500 font-medium mt-2 text-sm">
+            {activeRide ? "You have an active ride in progress. Complete it to view other available rides." : "Accept and confirm from the available ride listings."}
+          </p>
         </div>
+        <button 
+          onClick={fetchDashboardDetails} 
+          className="bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-4 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
+        >
+          <RefreshCw size={14} /> Refresh
+        </button>
       </div>
 
       <div className="relative z-10">
-        {loading ? (
-          <div className="text-center py-12 text-slate-500 font-medium text-lg">Loading your trips...</div>
-        ) : trips.length === 0 ? (
-          <div className="text-center py-16">
-            <MapPin size={48} className="mx-auto mb-4 text-slate-300 opacity-50" />
-            <h3 className="text-xl font-black text-slate-900 mb-1">No trips for today</h3>
-            <p className="text-slate-500 font-medium">You have no assigned trips scheduled for today.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {trips.map((trip) => (
-              <div key={trip._id} className={`rounded-3xl p-6 sm:p-8 flex flex-col transition-all relative overflow-hidden bg-slate-50 border hover:shadow-md ${trip.status === 'Ongoing' ? 'border-secondary bg-blue-50/50' : 'border-slate-100 hover:border-slate-200'}`}>
-                
-                {trip.status === 'Ongoing' && (
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-secondary/10 rounded-full blur-3xl -mr-10 -mt-10"></div>
-                )}
+        
+        {/* Active Ride Flow */}
+        {activeRide ? (
+          <div className="space-y-6">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-secondary/10 text-secondary text-xs font-black uppercase tracking-widest rounded-full">
+              <span className="w-2 h-2 rounded-full bg-secondary animate-pulse" /> Active Ride
+            </span>
 
-                <div className="flex justify-between items-start mb-8 relative z-10">
-                  <div>
-                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Booking ID</span>
-                    <p className="font-black text-slate-900 text-xl mt-0.5">#{trip._id.substring(0, 8).toUpperCase()}</p>
-                  </div>
-                  <span className={`inline-flex items-center gap-1.5 text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest ${
-                    trip.status === 'Ongoing' ? 'bg-secondary text-white shadow-sm' : 'bg-slate-200 text-slate-700'
-                  }`}>
-                    {trip.status === 'Ongoing' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
-                    {trip.status}
-                  </span>
+            <div className="border border-secondary bg-blue-50/20 rounded-3xl p-6 md:p-8 space-y-6 shadow-md">
+              <div className="flex flex-col md:flex-row justify-between md:items-center border-b border-slate-200/50 pb-6 gap-4">
+                <div>
+                  <p className="text-xs font-black text-slate-400 uppercase tracking-wider">Active Booking ID</p>
+                  <h3 className="text-2xl font-black text-slate-900 mt-1">#{activeRide._id.substring(0, 8).toUpperCase()}</h3>
                 </div>
-                
-                <div className="flex-1 space-y-8 relative z-10">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Customer</p>
-                      <p className="font-black text-slate-900 text-2xl tracking-tight">{trip.customer?.name || "Unknown"}</p>
-                    </div>
-                    {trip.customer?.phone && (
-                      <a href={`tel:${trip.customer.phone}`} className="flex items-center gap-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm">
-                        <Phone size={14} /> Call
-                      </a>
-                    )}
-                  </div>
-
-                  <div className="relative pl-6 space-y-6">
-                    <div className="absolute left-[7px] top-2 bottom-2 w-[2px] bg-slate-200"></div>
-                    <div className="relative">
-                      <div className="absolute left-[-24px] top-1.5 w-3 h-3 rounded-full border-2 border-secondary bg-white"></div>
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Pickup</p>
-                      <p className="text-base font-bold text-slate-700 mt-0.5 leading-snug">{trip.pickupLocation}</p>
-                    </div>
-                    <div className="relative">
-                      <div className="absolute left-[-24px] top-1.5 w-3 h-3 rounded-full bg-slate-300"></div>
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Drop</p>
-                      <p className="text-base font-bold text-slate-700 mt-0.5 leading-snug">{trip.dropLocation}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-6 pt-6 border-t border-slate-200">
-                    <div className="flex items-center gap-2.5 text-slate-700">
-                      <Clock size={16} className="text-secondary" />
-                      <span className="text-sm font-black">{trip.timeSlot}</span>
-                    </div>
-                    <div className="flex items-center gap-2.5 text-slate-700">
-                      <Car size={16} className="text-secondary" />
-                      <span className="text-sm font-black">{trip.car?.model || "Standard"}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-8 relative z-10">
-                  {trip.status === 'Confirmed' ? (
-                    <button 
-                      onClick={() => updateTripStatus(trip._id, 'Ongoing')}
-                      className="w-full bg-slate-900 hover:bg-slate-800 text-white font-black tracking-wide py-3.5 px-6 rounded-xl transition-all shadow-md text-sm uppercase"
-                    >
-                      Start Trip
-                    </button>
-                  ) : (
-                    <button 
-                      onClick={() => updateTripStatus(trip._id, 'Completed')}
-                      className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black tracking-wide py-3.5 px-6 rounded-xl transition-all shadow-md flex items-center justify-center gap-2 text-sm uppercase"
-                    >
-                      <CheckCircle size={16} /> Complete Trip
-                    </button>
-                  )}
+                <div className="flex flex-col md:items-end">
+                  <p className="text-xs font-black text-slate-400 uppercase tracking-wider">Fare Amount</p>
+                  <p className="text-3xl font-black text-emerald-600 mt-1">₹{activeRide.fare}</p>
                 </div>
               </div>
-            ))}
+
+              {/* Customer Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-6 rounded-2xl border border-slate-100">
+                <div className="space-y-4">
+                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider">Customer Contact</h4>
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold">
+                      {activeRide.customer?.name?.charAt(0).toUpperCase() || <User size={18} />}
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-900">{activeRide.customer?.name || "Premium Guest"}</p>
+                      <p className="text-xs text-slate-500 font-medium">{activeRide.customer?.phone || "Phone hidden"}</p>
+                    </div>
+                  </div>
+                </div>
+                {activeRide.customer?.phone && (
+                  <div className="flex items-center md:justify-end">
+                    <a 
+                      href={`tel:${activeRide.customer.phone}`} 
+                      className="bg-secondary hover:bg-secondary-hover text-white py-3 px-6 rounded-xl font-bold flex items-center gap-2 shadow-sm text-sm"
+                    >
+                      <Phone size={16} /> Call Customer
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              {/* Ride Address Path */}
+              <div className="relative pl-6 space-y-6">
+                <div className="absolute left-[7px] top-2.5 bottom-2.5 w-[2px] bg-slate-200" />
+                
+                <div className="relative">
+                  <div className="absolute left-[-24px] top-1.5 w-3.5 h-3.5 rounded-full border-2 border-secondary bg-white" />
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pickup Address</p>
+                  <p className="text-base font-bold text-slate-800 mt-0.5">{activeRide.pickupLocation}</p>
+                  <p className="text-xs text-slate-500 font-medium mt-1">
+                    Pickup Date/Time: {new Date(activeRide.pickupDateTime).toLocaleString()}
+                  </p>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute left-[-24px] top-1.5 w-3.5 h-3.5 rounded-full bg-slate-300" />
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Drop Address</p>
+                  <p className="text-base font-bold text-slate-800 mt-0.5">{activeRide.dropLocation}</p>
+                  <p className="text-xs text-slate-500 font-medium mt-1">
+                    Drop Date/Time: {new Date(activeRide.dropDateTime).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              {/* Active Ride Flow State Actions */}
+              <div className="border-t border-slate-200/50 pt-6">
+                <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-4">Ride Progression</p>
+                
+                {activeRide.status === 'Accepted' && (
+                  <button 
+                    onClick={() => progressRideStatus(activeRide._id, 'Arrived')}
+                    className="w-full bg-slate-900 hover:bg-slate-800 text-white font-black tracking-wider py-4 rounded-xl shadow-md transition-colors text-sm uppercase flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Navigation size={18} /> I have Arrived at Pick Up
+                  </button>
+                )}
+
+                {activeRide.status === 'Arrived' && (
+                  <button 
+                    onClick={() => progressRideStatus(activeRide._id, 'Ongoing')}
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black tracking-wider py-4 rounded-xl shadow-md transition-colors text-sm uppercase flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Play size={18} /> Pick Up Passengers & Start Ride
+                  </button>
+                )}
+
+                {activeRide.status === 'Ongoing' && (
+                  <div className="space-y-6">
+                    <div className="bg-slate-50 border border-slate-200 p-6 rounded-3xl space-y-4">
+                      <h4 className="text-sm font-black text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
+                        <DollarSign size={18} className="text-emerald-600" /> Collect Payment: <span className="text-emerald-600 font-extrabold text-base">₹{activeRide.fare}</span>
+                      </h4>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        {/* QR Code Option */}
+                        <button
+                          type="button"
+                          onClick={() => setSelectedPaymentMode('qr')}
+                          className={`p-4 rounded-2xl border text-center flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
+                            selectedPaymentMode === 'qr'
+                              ? 'bg-indigo-50/50 border-indigo-500 text-indigo-900 shadow-sm'
+                              : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                          }`}
+                        >
+                          <QrCode size={24} className={selectedPaymentMode === 'qr' ? 'text-indigo-600' : 'text-slate-400'} />
+                          <span className="text-xs font-bold uppercase tracking-wider">Scan UPI QR</span>
+                        </button>
+
+                        {/* Cash Option */}
+                        <button
+                          type="button"
+                          onClick={() => setSelectedPaymentMode('cash')}
+                          className={`p-4 rounded-2xl border text-center flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
+                            selectedPaymentMode === 'cash'
+                              ? 'bg-emerald-50/50 border-emerald-500 text-emerald-900 shadow-sm'
+                              : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                          }`}
+                        >
+                          <Coins size={24} className={selectedPaymentMode === 'cash' ? 'text-emerald-600' : 'text-slate-400'} />
+                          <span className="text-xs font-bold uppercase tracking-wider">Collect Cash</span>
+                        </button>
+                      </div>
+
+                      {/* Mode Specific Display */}
+                      {selectedPaymentMode === 'qr' && (
+                        <div className="bg-white border border-slate-200 p-6 rounded-2xl flex flex-col items-center gap-4 text-center animate-fade-in">
+                          <p className="text-xs text-slate-500 font-semibold">Passenger can scan GPay, PhonePe, Paytm, or BHIM</p>
+                          <div className="p-2 border border-slate-100 rounded-xl bg-white shadow-xs">
+                            <img
+                              src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&data=${encodeURIComponent(
+                                `upi://pay?pa=${driver?.upiId || "admin@upi"}&pn=${encodeURIComponent(driver?.name || "CAB BAZAR Driver")}&am=${activeRide.fare}&cu=INR`
+                              )}`}
+                              alt="UPI QR Code"
+                              className="w-44 h-44 object-contain"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-xs font-bold text-slate-800">UPI: {driver?.upiId || "admin@upi"}</p>
+                            <p className="text-[10px] text-slate-400 font-medium">After scanning, passenger will pay ₹{activeRide.fare}</p>
+                          </div>
+                          <button
+                            onClick={() => progressRideStatus(activeRide._id, 'Completed', 'Paid Online')}
+                            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black tracking-wider py-3.5 rounded-xl shadow-md transition-colors text-xs uppercase flex items-center justify-center gap-2 cursor-pointer mt-2"
+                          >
+                            <CheckCircle size={16} /> Online Payment Received & Complete
+                          </button>
+                        </div>
+                      )}
+
+                      {selectedPaymentMode === 'cash' && (
+                        <div className="bg-white border border-slate-200 p-6 rounded-2xl flex flex-col items-center gap-4 text-center animate-fade-in">
+                          <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                            <DollarSign size={24} />
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm font-bold text-slate-800">Please collect ₹{activeRide.fare} in Cash</p>
+                            <p className="text-[10px] text-slate-400 font-medium">Count the cash directly from the passenger</p>
+                          </div>
+                          <button
+                            onClick={() => progressRideStatus(activeRide._id, 'Completed', 'Paid by Cash')}
+                            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black tracking-wider py-3.5 rounded-xl shadow-md transition-colors text-xs uppercase flex items-center justify-center gap-2 cursor-pointer"
+                          >
+                            <CheckCircle size={16} /> Cash Collected & Complete Ride
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Available Rides List */
+          <div className="space-y-6">
+            <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest">Available Ride Offers</h2>
+            
+            {availableRides.length === 0 ? (
+              <div className="text-center py-16 border border-dashed border-slate-200 rounded-3xl bg-slate-50/50">
+                <MapPin size={48} className="mx-auto mb-4 text-slate-300 opacity-50" />
+                <h3 className="text-lg font-black text-slate-900 mb-1">No rides available</h3>
+                <p className="text-slate-500 text-sm max-w-xs mx-auto">There are currently no new rides posted by the admin. We will notify you when new rides appear.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {availableRides.map((ride) => (
+                  <div key={ride._id} className="bg-white border border-slate-200 hover:border-slate-300 rounded-3xl p-6 sm:p-8 flex flex-col justify-between shadow-xs hover:shadow-md transition-all">
+                    
+                    <div className="space-y-6">
+                      <div className="flex justify-between items-start border-b border-slate-100 pb-4">
+                        <div>
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Ride Offer ID</span>
+                          <p className="font-black text-slate-900 text-lg">#{ride._id.substring(0, 8).toUpperCase()}</p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Fare</span>
+                          <p className="text-2xl font-black text-emerald-600">₹{ride.fare}</p>
+                        </div>
+                      </div>
+
+                      {/* Client Details */}
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Customer Name</p>
+                        <p className="font-bold text-slate-900 mt-0.5">{ride.customer?.name || "Premium Guest"}</p>
+                      </div>
+
+                      {/* Path */}
+                      <div className="relative pl-6 space-y-4">
+                        <div className="absolute left-[5px] top-2 bottom-2 w-[1.5px] bg-slate-200" />
+                        
+                        <div className="relative">
+                          <div className="absolute left-[-23px] top-1.5 w-2.5 h-2.5 rounded-full border border-secondary bg-white" />
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">From</p>
+                          <p className="text-sm font-bold text-slate-700 mt-0.5 leading-snug">{ride.pickupLocation}</p>
+                          <p className="text-[10px] text-slate-500 font-medium mt-0.5">
+                            {new Date(ride.pickupDateTime).toLocaleString()}
+                          </p>
+                        </div>
+
+                        <div className="relative">
+                          <div className="absolute left-[-23px] top-1.5 w-2.5 h-2.5 rounded-full bg-slate-300" />
+                          <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">To</p>
+                          <p className="text-sm font-bold text-slate-700 mt-0.5 leading-snug">{ride.dropLocation}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={() => acceptRide(ride._id)}
+                      className="w-full mt-6 bg-slate-900 hover:bg-slate-800 text-white font-black py-3 rounded-xl shadow-sm hover:shadow text-xs uppercase tracking-wider transition-colors cursor-pointer"
+                    >
+                      Confirm & Accept Ride
+                    </button>
+
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
+
       </div>
     </div>
   );

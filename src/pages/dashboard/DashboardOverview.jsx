@@ -1,198 +1,161 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Shield, MapPin, Calendar, Clock, ArrowRight, Activity, IndianRupee, Car } from "lucide-react";
+import { AlertCircle, IndianRupee, Car, CheckCircle, Wallet, AlertTriangle, RefreshCw } from "lucide-react";
 import api from "../../api";
 
 export default function DashboardOverview({ driver }) {
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    todayTripsCount: 0,
-    completedTripsCount: 0,
-    todaysEarnings: 0
-  });
-  const [nextTrip, setNextTrip] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (driver?._id) {
-      fetchDashboardData();
-    }
-  }, [driver]);
+    fetchDriverStats();
+  }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchDriverStats = async () => {
     setLoading(true);
+    setError("");
     try {
-      const response = await api.get(`/bookings?driver=${driver._id}`);
-      const allBookings = response.data.data;
-      
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-
-      let todayCount = 0;
-      let completedCount = 0;
-      let earningsToday = 0;
-      let upcoming = [];
-
-      allBookings.forEach(trip => {
-        const tripDate = new Date(trip.journeyDate);
-        const isToday = tripDate >= today && tripDate < tomorrow;
-
-        if (trip.status === 'Completed') {
-          completedCount++;
-        }
-
-        if (isToday) {
-          if (trip.status !== 'Cancelled') todayCount++;
-          if (trip.status === 'Completed') earningsToday += trip.fare;
-          
-          if (trip.status === 'Confirmed' || trip.status === 'Ongoing') {
-            upcoming.push(trip);
-          }
-        }
-      });
-
-      // Sort upcoming by date/time (using date for now as time is in timeSlot)
-      upcoming.sort((a, b) => new Date(a.journeyDate) - new Date(b.journeyDate));
-
-      setStats({
-        todayTripsCount: todayCount,
-        completedTripsCount: completedCount,
-        todaysEarnings: earningsToday
-      });
-
-      setNextTrip(upcoming.length > 0 ? upcoming[0] : null);
-
+      const response = await api.get("/dashboard/driver-stats");
+      setStats(response.data.data);
     } catch (err) {
-      console.error("Failed to fetch dashboard data", err);
+      console.error(err);
+      setError(err.response?.data?.error || "Failed to load dashboard statistics");
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="bg-white text-slate-900 rounded-[2.5rem] p-6 sm:p-10 space-y-8 shadow-xl border border-slate-100 overflow-hidden relative">
-      {/* Background ambient glows */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-[100px] pointer-events-none translate-x-1/3 -translate-y-1/3"></div>
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/5 rounded-full blur-[100px] pointer-events-none -translate-x-1/3 translate-y-1/3"></div>
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-20 bg-white rounded-3xl shadow-sm border border-slate-100">
+        <div className="flex flex-col items-center gap-4">
+          <RefreshCw className="animate-spin text-secondary" size={32} />
+          <p className="text-sm font-bold text-slate-500">Loading Dashboard stats...</p>
+        </div>
+      </div>
+    );
+  }
 
-      {/* Welcome Banner - Bento Item */}
-      <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 pb-6 border-b border-slate-100">
+  if (error) {
+    return (
+      <div className="bg-red-50 text-red-600 p-6 rounded-2xl border border-red-100 text-center space-y-4">
+        <AlertCircle size={32} className="mx-auto" />
+        <p className="font-bold">{error}</p>
+        <button
+          onClick={fetchDriverStats}
+          className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-xl text-sm transition-colors cursor-pointer"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
+  const { rideCount, grossEarnings, walletBalance, warnings, status } = stats;
+
+  return (
+    <div className="space-y-8 animate-fade-in">
+      
+      {/* Welcome Banner */}
+      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/60 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+        
         <div className="space-y-2 text-center md:text-left">
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
             Welcome back, <span className="text-secondary">{driver?.name || "Driver Partner"}!</span>
           </h1>
-          <p className="text-slate-500 text-base leading-relaxed font-medium mt-2 max-w-xl">
-            You are currently online. Check your assigned trips for today and make sure your vehicle is ready.
+          <p className="text-slate-500 text-sm leading-relaxed max-w-xl font-medium">
+            Here's a summary of your profile status, wallet balance, and document deadlines.
           </p>
         </div>
 
-        <div className="shrink-0 flex items-center gap-2 bg-emerald-50 text-emerald-600 font-black tracking-widest uppercase text-[10px] py-2 px-5 rounded-full border border-emerald-100">
-          <Activity size={14} className="animate-pulse" />
-          <span>Active & Online</span>
+        <div className="shrink-0 flex items-center gap-2 bg-emerald-50 text-emerald-700 font-bold text-xs py-2 px-5 rounded-full border border-emerald-100">
+          <CheckCircle size={14} className="text-emerald-500" />
+          <span className="uppercase tracking-widest">Active & Online</span>
         </div>
       </div>
 
-      {/* Bento Grid layout */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+      {/* Verification Status Warning if not approved */}
+      {status !== 'approved' && (
+        <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl text-amber-800 text-sm flex gap-3">
+          <AlertTriangle className="shrink-0 text-amber-600" />
+          <div>
+            <p className="font-bold">Account Verification Pending</p>
+            <p className="text-amber-700/90 mt-1">
+              Your profile is currently marked as <strong className="uppercase">{status}</strong>. Complete access will be granted once the administrator verifies your documents.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Document Expiry Alerts */}
+      {warnings && warnings.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-xs font-black text-slate-400 uppercase tracking-widest">Document Deadline Reminders</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {warnings.map((warn, i) => (
+              <div
+                key={i}
+                className={`p-4 rounded-2xl border text-sm flex items-start gap-3 ${
+                  warn.type === 'danger'
+                    ? 'bg-rose-50 border-rose-200 text-rose-800'
+                    : 'bg-amber-50 border-amber-200 text-amber-800'
+                }`}
+              >
+                <AlertCircle className={`shrink-0 ${warn.type === 'danger' ? 'text-rose-600' : 'text-amber-600'}`} size={18} />
+                <div>
+                  <p className="font-bold">{warn.document} Reminder</p>
+                  <p className="opacity-90 mt-0.5">{warn.message}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Bento Grid Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
-        {/* Stats row - 3 Bento items */}
-        <div className="bg-slate-50 border border-slate-100 p-6 rounded-3xl hover:shadow-md hover:border-slate-200 transition-all flex flex-col justify-between">
-          <div className="flex justify-between items-start mb-6">
-            <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Today's Trips</p>
-            <MapPin size={20} className="text-secondary" />
+        {/* Total Rides */}
+        <div className="bg-white border border-slate-200/60 p-6 rounded-3xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between h-36">
+          <div className="flex justify-between items-start">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Completed Rides</span>
+            <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center"><Car size={16} /></div>
           </div>
-          <h3 className="text-5xl font-black text-slate-900">{loading ? '...' : stats.todayTripsCount}</h3>
+          <h3 className="text-4xl font-black text-slate-900">{rideCount}</h3>
         </div>
 
-        <div className="bg-slate-50 border border-slate-100 p-6 rounded-3xl hover:shadow-md hover:border-slate-200 transition-all flex flex-col justify-between">
-          <div className="flex justify-between items-start mb-6">
-            <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest">Completed</p>
-            <Calendar size={20} className="text-purple-500" />
+        {/* Total Gross Earnings */}
+        <div className="bg-white border border-slate-200/60 p-6 rounded-3xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between h-36">
+          <div className="flex justify-between items-start">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Gross Earnings</span>
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center"><IndianRupee size={16} /></div>
           </div>
-          <h3 className="text-5xl font-black text-slate-900">{loading ? '...' : stats.completedTripsCount}</h3>
+          <h3 className="text-4xl font-black text-slate-900">₹{grossEarnings}</h3>
         </div>
 
-        <div className="md:col-span-2 bg-gradient-to-br from-secondary/10 to-accent/10 border border-secondary/20 p-6 rounded-3xl hover:border-secondary/40 hover:shadow-md transition-all flex flex-col justify-between relative overflow-hidden">
-          <div className="absolute right-0 top-0 w-32 h-32 bg-secondary/20 blur-2xl rounded-full"></div>
-          <div className="flex justify-between items-start mb-6 relative z-10">
-            <p className="text-[11px] font-black text-slate-700 uppercase tracking-widest">Today's Earnings</p>
-            <IndianRupee size={20} className="text-secondary" />
+        {/* Wallet Balance */}
+        <div className={`border p-6 rounded-3xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between h-36 ${
+          walletBalance < 2000 
+            ? 'bg-rose-50/50 border-rose-200 text-rose-900' 
+            : 'bg-white border-slate-200/60'
+        }`}>
+          <div className="flex justify-between items-start">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Wallet Balance</span>
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+              walletBalance < 2000 ? 'bg-rose-100 text-rose-700' : 'bg-secondary/10 text-secondary'
+            }`}><Wallet size={16} /></div>
           </div>
-          <h3 className="text-6xl font-black text-slate-900 relative z-10">₹{loading ? '...' : stats.todaysEarnings}</h3>
-        </div>
-
-        {/* Next Assigned Trip - Large Bento item */}
-        <div className="md:col-span-2 lg:col-span-4 bg-slate-50 border border-slate-100 p-6 rounded-3xl hover:shadow-md hover:border-slate-200 transition-all flex flex-col">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
-              <Clock size={18} className="text-secondary" /> Next Assigned Trip
-            </h2>
-            <Link to="/dashboard/today" className="text-xs font-black text-secondary hover:text-slate-900 uppercase tracking-widest transition-colors flex items-center gap-1">
-              View All <ArrowRight size={14} />
-            </Link>
-          </div>
-          
-          <div className="flex-1 flex flex-col justify-center">
-            {loading ? (
-              <div className="text-slate-500 font-medium">Loading schedule...</div>
-            ) : nextTrip ? (
-              <div className="flex flex-col md:flex-row gap-6 md:items-center justify-between bg-white shadow-sm p-6 rounded-2xl border border-slate-100">
-                <div className="space-y-4 flex-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className={`inline-flex items-center gap-1 text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest mb-2 ${nextTrip.status === 'Ongoing' ? 'bg-secondary text-white' : 'bg-slate-100 text-slate-600'}`}>
-                        {nextTrip.status === 'Ongoing' && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
-                        {nextTrip.status === 'Ongoing' ? 'Ongoing Trip' : 'Upcoming'}
-                      </span>
-                      <h4 className="font-black text-slate-900 text-xl">#{nextTrip._id.substring(0, 8).toUpperCase()}</h4>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xl font-black text-slate-900">{nextTrip.timeSlot}</p>
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Today</p>
-                    </div>
-                  </div>
-                  
-                  <div className="relative pl-6 space-y-4">
-                    <div className="absolute left-[7px] top-2 bottom-2 w-[2px] bg-slate-200"></div>
-                    
-                    <div className="relative">
-                      <div className="absolute left-[-24px] top-1 w-3 h-3 rounded-full border-2 border-secondary bg-white"></div>
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Pickup</p>
-                      <p className="text-sm font-bold text-slate-700 mt-0.5">{nextTrip.pickupLocation}</p>
-                    </div>
-                    
-                    <div className="relative">
-                      <div className="absolute left-[-24px] top-1 w-3 h-3 rounded-full bg-slate-300"></div>
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Drop</p>
-                      <p className="text-sm font-bold text-slate-700 mt-0.5">{nextTrip.dropLocation}</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="md:border-l md:border-slate-100 md:pl-6 shrink-0 flex flex-col gap-3 w-full md:w-auto">
-                  <Link to="/dashboard/today" className="text-center w-full bg-slate-900 text-white hover:bg-slate-800 font-black py-3 px-6 rounded-xl transition-all text-sm">
-                    View Details
-                  </Link>
-                  {nextTrip.customer?.phone && (
-                    <a href={`tel:${nextTrip.customer.phone}`} className="text-center w-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-black py-3 px-6 rounded-xl transition-all text-sm shadow-sm">
-                      Call Customer
-                    </a>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="text-slate-500 flex items-center gap-3">
-                <MapPin size={24} className="opacity-50" />
-                <p className="font-medium">No upcoming trips assigned for today.</p>
-              </div>
+          <div>
+            <h3 className="text-4xl font-black text-slate-900">₹{walletBalance}</h3>
+            {walletBalance < 2000 && (
+              <p className="text-[10px] text-rose-600 font-bold mt-1 animate-pulse">Below limit (₹2000)! Recharge to accept rides.</p>
             )}
           </div>
         </div>
 
-
-
       </div>
+
     </div>
   );
 }

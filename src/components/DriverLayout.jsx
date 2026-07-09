@@ -8,8 +8,8 @@ export default function DriverLayout({ driver, triggerLogoutConfirm }) {
 
   const navItems = [
     { path: "/dashboard", label: "Overview", icon: <LayoutDashboard size={20} />, end: true },
-    { path: "/dashboard/today", label: "Today's Trips", icon: <Map size={20} /> },
-    { path: "/dashboard/history", label: "Trip History", icon: <History size={20} /> },
+    { path: "/dashboard/today", label: "Available & Active Rides", icon: <Map size={20} /> },
+    { path: "/dashboard/history", label: "Wallet & Past Trips", icon: <History size={20} /> },
     { path: "/dashboard/car", label: "My Car", icon: <Car size={20} /> },
     { path: "/dashboard/profile", label: "My Profile", icon: <User size={20} /> },
   ];
