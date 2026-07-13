@@ -60,7 +60,7 @@ export default function Login({ onLoginSuccess, addToast }) {
               to="/"
               className="inline-flex bg-slate-50 p-2 rounded-xl mb-3 border border-slate-100 shadow-sm cursor-pointer hover:bg-slate-100 transition-colors"
             >
-              <img src="/logo.png" alt="CAB BAZAR logo" className="h-14 w-auto object-contain" />
+              <img src="/logo.png" alt="Route Cabs logo" className="h-14 w-auto object-contain" />
             </Link>
             <h2 className="text-2xl font-black text-slate-900 tracking-wide">Welcome Back</h2>
             <p className="text-slate-500 text-sm mt-1">Sign in to your Driver Portal</p>
@@ -85,7 +85,7 @@ export default function Login({ onLoginSuccess, addToast }) {
                   <input
                     type="text"
                     className="w-full py-2.5 pl-10 pr-4 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-secondary focus:ring-3 focus:ring-blue-500/15 transition-all"
-                    placeholder="alex.pierce@carbazar.com"
+                    placeholder="driver@routecabs.com"
                     value={loginIdentifier}
                     onChange={(e) => setLoginIdentifier(e.target.value)}
                     required
@@ -148,10 +148,7 @@ export default function Login({ onLoginSuccess, addToast }) {
               </Link>
             </div>
 
-            <div className="text-center text-xs text-slate-400 border-t border-slate-100 pt-4 space-y-1">
-              <p>Default: <strong>alex.pierce@carbazar.com</strong></p>
-              <p>Password: <strong>password123</strong></p>
-            </div>
+
           </div>
 
         </div>

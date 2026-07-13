@@ -24,7 +24,7 @@ export default function Contact({ addToast }) {
       {/* Page Header */}
       <section className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white py-16 px-6 text-center border-b border-slate-800">
         <h1 className="text-3xl md:text-5xl font-extrabold mb-3 text-white font-sans tracking-tight">Contact Us</h1>
-        <p className="text-slate-400 text-sm md:text-base">Get in touch with the CAB BAZAR corporate desk or operations team</p>
+        <p className="text-slate-400 text-sm md:text-base">Get in touch with the Route Cabs corporate desk or operations team</p>
       </section>
 
       {/* Main Section */}
@@ -85,7 +85,7 @@ export default function Contact({ addToast }) {
                   <div className="w-5 h-5 rounded-full bg-blue-600 border-2 border-white shadow-md"></div>
                 </div>
                 <div className="absolute bottom-4 bg-white py-1.5 px-3 rounded-lg text-xs font-bold shadow-md">
-                  CAB BAZAR Corporate HQ
+                  Route Cabs Corporate HQ
                 </div>
               </div>
             </div>

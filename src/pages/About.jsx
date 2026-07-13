@@ -13,7 +13,7 @@ export default function About() {
     <div className="animate-fade-in">
       {/* Page Header */}
       <section className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white py-16 px-6 text-center border-b border-slate-800">
-        <h1 className="text-3xl md:text-5xl font-extrabold mb-3 text-white tracking-tight">About CAB BAZAR</h1>
+        <h1 className="text-3xl md:text-5xl font-extrabold mb-3 text-white tracking-tight">About Route Cabs</h1>
         <p className="text-slate-400 text-sm md:text-base">Our history, values, and dedication to excellence</p>
       </section>
 
@@ -30,7 +30,7 @@ export default function About() {
           <div>
             <h2 className="text-3xl font-bold text-slate-900 mb-6">Our Story</h2>
             <p className="text-slate-500 leading-relaxed mb-4 text-sm md:text-base">
-              Founded in 2014, CAB BAZAR emerged with a vision to redefine urban and outstation passenger transit. We recognized the demand for a highly disciplined, premium car rental network where quality, punctuality, and chauffeur professionalism are paramount.
+              Founded in 2014, Route Cabs emerged with a vision to redefine urban and outstation passenger transit. We recognized the demand for a highly disciplined, premium car rental network where quality, punctuality, and chauffeur professionalism are paramount.
             </p>
             <p className="text-slate-500 leading-relaxed text-sm md:text-base">
               Today, we are a leading travel logistics partner for major multinational corporations, luxury hotels, and demanding private clients. We achieve this by empowering our drivers with premium tools, continuous professional training, and industry-leading platform support.
@@ -68,7 +68,7 @@ export default function About() {
       <section className="bg-slate-900 border-t border-slate-800 py-20 px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent pointer-events-none"></div>
         <div className="max-w-6xl mx-auto text-center relative z-10">
-          <h2 className="text-3xl font-extrabold mb-2 text-white">CAB BAZAR in Numbers</h2>
+          <h2 className="text-3xl font-extrabold mb-2 text-white">Route Cabs in Numbers</h2>
           <p className="text-slate-400 mb-12 text-sm md:text-base">A snapshot of our journey and growth over the years</p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, idx) => (

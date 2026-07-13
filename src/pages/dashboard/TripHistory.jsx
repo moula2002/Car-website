@@ -224,7 +224,7 @@ export default function TripHistory({ driver }) {
                     <div className="p-2 border border-slate-100 rounded-xl bg-white shadow-xs">
                       <img
                         src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&margin=10&data=${encodeURIComponent(
-                          `upi://pay?pa=${adminUpi || "admin@upi"}&pn=${encodeURIComponent("CAB BAZAR Admin")}&am=${rechargeAmount}&cu=INR`
+                          `upi://pay?pa=${adminUpi || "admin@upi"}&pn=${encodeURIComponent("Route Cabs Admin")}&am=${rechargeAmount}&cu=INR`
                         )}`}
                         alt="Admin UPI QR Code"
                         className="w-36 h-36 object-contain"

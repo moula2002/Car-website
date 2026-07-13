@@ -101,7 +101,7 @@ export default function App() {
               Confirm Logout
             </div>
             <div className="text-sm text-slate-500 mb-6 leading-relaxed">
-              Are you sure you want to log out of your CAB BAZAR driver session?
+              Are you sure you want to log out of your Route Cabs driver session?
             </div>
             <div className="flex justify-end gap-3">
               <button

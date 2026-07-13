@@ -88,7 +88,7 @@ export default function MyProfile({ driver }) {
               <Shield size={20} className="text-secondary" />
               Verified Documents
             </h2>
-            <p className="text-xs text-slate-500 mt-1 ml-7">Documents are verified by CAB BAZAR admins and cannot be changed here.</p>
+            <p className="text-xs text-slate-500 mt-1 ml-7">Documents are verified by Route Cabs admins and cannot be changed here.</p>
           </div>
 
           <div className="p-6 space-y-6">

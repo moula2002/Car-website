@@ -7,13 +7,13 @@ export default function Footer() {
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
         <div className="col-span-1">
           <div className="flex items-center gap-3 font-bold text-xl tracking-tight text-slate-800 mb-4">
-            <img src="/logo.png" alt="CAB BAZAR logo" className="h-10 w-auto object-contain" />
+            <img src="/logo.png" alt="Route Cabs logo" className="h-10 w-auto object-contain" />
             <span className="font-extrabold text-lg tracking-wide text-slate-900">
               CAB <span className="text-secondary">BAZAR</span>
             </span>
           </div>
           <p className="text-sm leading-relaxed">
-            CAB BAZAR is a premium vehicle booking and driver management agency. Delivering professional, safe, and on-time travel experiences across all cities.
+            Route Cabs is a premium vehicle booking and driver management agency. Delivering professional, safe, and on-time travel experiences across all cities.
           </p>
         </div>
 
@@ -35,7 +35,7 @@ export default function Footer() {
         <div>
           <h4 className="text-slate-800 font-semibold text-lg mb-4">Driver Desk</h4>
           <p className="text-sm leading-relaxed mb-4">
-            Exclusively for registered CAB BAZAR drivers. Access your portal to manage your verification profile and documents.
+            Exclusively for registered Route Cabs drivers. Access your portal to manage your verification profile and documents.
           </p>
           <Link
             to="/login"
@@ -47,7 +47,7 @@ export default function Footer() {
       </div>
 
       <div className="max-w-6xl mx-auto pt-8 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center text-xs gap-4">
-        <p>&copy; {new Date().getFullYear()} CAB BAZAR. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} Route Cabs. All rights reserved.</p>
         <div className="flex gap-6">
           <span className="cursor-pointer hover:text-slate-800 transition-colors">Privacy Policy</span>
           <span className="cursor-pointer hover:text-slate-800 transition-colors">Terms & Conditions</span>

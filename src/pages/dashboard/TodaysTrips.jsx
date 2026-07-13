@@ -10,15 +10,47 @@ export default function TodaysTrips({ driver }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [selectedPaymentMode, setSelectedPaymentMode] = useState(null); // 'cash' or 'qr'
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  useEffect(() => {
+    const timerId = setInterval(() => setCurrentTime(Date.now()), 1000);
+    return () => clearInterval(timerId);
+  }, []);
+
+  // Filter out expired rides in real-time
+  useEffect(() => {
+    setAvailableRides(prevRides => {
+      let changed = false;
+      const now = Date.now();
+      const newRides = prevRides.filter(ride => {
+        if (!ride.timer || !ride.startTime) return true;
+        const start = new Date(ride.startTime).getTime();
+        const elapsedSecs = Math.floor((now - start) / 1000);
+        if (ride.timer * 60 - elapsedSecs <= 0) {
+          changed = true;
+          return false;
+        }
+        return true;
+      });
+      if (changed) {
+        setTimeout(() => fetchDashboardDetails(true), 0);
+      }
+      return changed ? newRides : prevRides;
+    });
+  }, [currentTime]);
 
   useEffect(() => {
     fetchDashboardDetails();
+    const pollId = setInterval(() => fetchDashboardDetails(true), 5000);
+    return () => clearInterval(pollId);
   }, []);
 
-  const fetchDashboardDetails = async () => {
-    setLoading(true);
-    setError("");
-    setSelectedPaymentMode(null); // Reset selection on refresh
+  const fetchDashboardDetails = async (isBackground = false) => {
+    if (!isBackground) {
+      setLoading(true);
+      setError("");
+      setSelectedPaymentMode(null); // Reset selection on refresh
+    }
     try {
       // 1. Fetch driver profile stats and my-trips in parallel
       const [statsRes, myTripsRes] = await Promise.all([
@@ -42,9 +74,18 @@ export default function TodaysTrips({ driver }) {
         return;
       }
 
-      const active = myTripsRes.data.data.find(trip =>
-        ['Accepted', 'Arrived', 'Ongoing'].includes(trip.status)
-      );
+      const now = Date.now();
+      const active = myTripsRes.data.data.find(trip => {
+        if (!['Accepted', 'Admin Accepted', 'Arrived', 'Ongoing'].includes(trip.status)) return false;
+        if (trip.status === 'Admin Accepted' && trip.timer && trip.startTime) {
+          const start = new Date(trip.startTime).getTime();
+          const elapsedSecs = Math.floor((now - start) / 1000);
+          if (trip.timer * 60 - elapsedSecs > 0) {
+            return false; // Still ticking, not active yet
+          }
+        }
+        return true;
+      });
 
       if (!active && activeRide) {
         const oldRideUpdated = myTripsRes.data.data.find(trip => trip._id === activeRide._id);
@@ -59,7 +100,13 @@ export default function TodaysTrips({ driver }) {
         setActiveRide(null);
         // 3. If no active ride, fetch available rides
         const availableRes = await api.get("/bookings/available");
-        setAvailableRides(availableRes.data.data);
+        const validRides = availableRes.data.data.filter(ride => {
+          if (!ride.timer || !ride.startTime) return true;
+          const start = new Date(ride.startTime).getTime();
+          const elapsedSecs = Math.floor((now - start) / 1000);
+          return (ride.timer * 60 - elapsedSecs) > 0;
+        });
+        setAvailableRides(validRides);
       }
 
     } catch (err) {
@@ -239,7 +286,7 @@ export default function TodaysTrips({ driver }) {
               <div className="border-t border-slate-200/50 pt-6">
                 <p className="text-xs font-black text-slate-400 uppercase tracking-wider mb-4">Ride Progression</p>
 
-                {activeRide.status === 'Accepted' && (
+                {(activeRide.status === 'Accepted' || activeRide.status === 'Admin Accepted') && (
                   <button
                     onClick={() => progressRideStatus(activeRide._id, 'Arrived')}
                     className="w-full bg-slate-900 hover:bg-slate-800 text-white font-black tracking-wider py-4 rounded-xl shadow-md transition-colors text-sm uppercase flex items-center justify-center gap-2 cursor-pointer"
@@ -270,8 +317,8 @@ export default function TodaysTrips({ driver }) {
                           type="button"
                           onClick={() => setSelectedPaymentMode('qr')}
                           className={`p-4 rounded-2xl border text-center flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${selectedPaymentMode === 'qr'
-                              ? 'bg-indigo-50/50 border-indigo-500 text-indigo-900 shadow-sm'
-                              : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                            ? 'bg-indigo-50/50 border-indigo-500 text-indigo-900 shadow-sm'
+                            : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                             }`}
                         >
                           <QrCode size={24} className={selectedPaymentMode === 'qr' ? 'text-indigo-600' : 'text-slate-400'} />
@@ -283,8 +330,8 @@ export default function TodaysTrips({ driver }) {
                           type="button"
                           onClick={() => setSelectedPaymentMode('cash')}
                           className={`p-4 rounded-2xl border text-center flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${selectedPaymentMode === 'cash'
-                              ? 'bg-emerald-50/50 border-emerald-500 text-emerald-900 shadow-sm'
-                              : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                            ? 'bg-emerald-50/50 border-emerald-500 text-emerald-900 shadow-sm'
+                            : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
                             }`}
                         >
                           <Coins size={24} className={selectedPaymentMode === 'cash' ? 'text-emerald-600' : 'text-slate-400'} />
@@ -299,7 +346,7 @@ export default function TodaysTrips({ driver }) {
                           <div className="p-2 border border-slate-100 rounded-xl bg-white shadow-xs">
                             <img
                               src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=10&data=${encodeURIComponent(
-                                `upi://pay?pa=${driver?.upiId || "admin@upi"}&pn=${encodeURIComponent(driver?.name || "CAB BAZAR Driver")}&am=${activeRide.fare}&cu=INR`
+                                `upi://pay?pa=${driver?.upiId || "admin@upi"}&pn=${encodeURIComponent(driver?.name || "Route Cabs Driver")}&am=${activeRide.fare}&cu=INR`
                               )}`}
                               alt="UPI QR Code"
                               className="w-44 h-44 object-contain"
@@ -363,9 +410,26 @@ export default function TodaysTrips({ driver }) {
                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Ride Offer ID</span>
                           <p className="font-black text-slate-900 text-lg">#{ride._id.substring(0, 8).toUpperCase()}</p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right flex flex-col items-end">
                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Fare</span>
                           <p className="text-2xl font-black text-emerald-600">₹{ride.fare}</p>
+                          {ride.timer && (
+                            <div className="flex items-center gap-1 mt-1 text-rose-500 font-bold bg-rose-50 px-2 py-1 rounded-md text-xs">
+                              <Clock size={12} />
+                              <span>
+                                {(() => {
+                                  if (!ride.startTime) return `${ride.timer}:00`;
+                                  const start = new Date(ride.startTime).getTime();
+                                  const elapsedSecs = Math.floor((currentTime - start) / 1000);
+                                  const remainingSecs = Math.max(0, ride.timer * 60 - elapsedSecs);
+                                  const m = Math.floor(remainingSecs / 60);
+                                  const s = remainingSecs % 60;
+                                  return `${m}:${s < 10 ? '0' : ''}${s}`;
+                                })()}
+                              </span>
+                            </div>
+                          )}
+
                         </div>
                       </div>
 
@@ -396,12 +460,24 @@ export default function TodaysTrips({ driver }) {
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => acceptRide(ride._id)}
-                      className="w-full mt-6 bg-slate-900 hover:bg-slate-800 text-white font-black py-3 rounded-xl shadow-sm hover:shadow text-xs uppercase tracking-wider transition-colors cursor-pointer"
-                    >
-                      Confirm & Accept Ride
-                    </button>
+                    {ride.appliedDrivers?.includes(driver._id) ? (
+                      <button
+                        disabled
+                        className={`w-full mt-6 font-black py-3 rounded-xl shadow-sm text-xs uppercase tracking-wider cursor-not-allowed ${ride.status === 'Admin Accepted'
+                          ? 'bg-emerald-100 text-emerald-600'
+                          : 'bg-slate-300 text-slate-500'
+                          }`}
+                      >
+                        {ride.status === 'Admin Accepted' ? 'Admin Accepted' : 'Waiting for Approval'}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => acceptRide(ride._id)}
+                        className="w-full mt-6 bg-slate-900 hover:bg-slate-800 text-white font-black py-3 rounded-xl shadow-sm hover:shadow text-xs uppercase tracking-wider transition-colors cursor-pointer"
+                      >
+                        Accept Ride
+                      </button>
+                    )}
 
                   </div>
                 ))}

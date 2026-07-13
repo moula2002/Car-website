@@ -82,24 +82,13 @@ export default function Navbar({ isLoggedIn, driver, triggerLogoutConfirm }) {
             to="/"
             className="flex items-center gap-3 cursor-pointer select-none group shrink-0"
           >
-            <div className="relative hidden sm:block">
+            <div className="relative">
               <img
                 src="/logo.png"
-                alt="CAB BAZAR logo"
-                className="h-10 xl:h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-110 group-hover:rotate-2"
+                alt="Route Cabs logo"
+                className="h-16 xl:h-20 w-auto object-contain transition-transform duration-300 group-hover:scale-110 group-hover:rotate-2"
               />
               <span className="absolute inset-0 rounded-full bg-blue-400/20 scale-0 group-hover:scale-125 transition-transform duration-400 blur-sm pointer-events-none"></span>
-            </div>
-            <div className="flex flex-col leading-none">
-              <span className="font-black text-lg xl:text-xl tracking-wider transition-colors duration-300 text-slate-900">
-                CAB{" "}
-                <span className="text-secondary bg-gradient-to-r from-secondary to-accent bg-clip-text text-transparent">
-                  BAZAR
-                </span>
-              </span>
-              <span className="text-[9px] font-semibold tracking-[0.2em] uppercase transition-colors duration-300 text-slate-500">
-                Driver Portal
-              </span>
             </div>
           </Link>
 

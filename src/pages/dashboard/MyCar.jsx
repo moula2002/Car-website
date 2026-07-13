@@ -105,7 +105,7 @@ export default function MyCar({ driver }) {
             
             <div className="w-full text-sm text-slate-700 font-medium flex items-start gap-4 text-left bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
               <Info size={24} className="text-secondary shrink-0" />
-              <p>This vehicle is assigned to you by CAB BAZAR admins. Please contact support for any maintenance requests.</p>
+              <p>This vehicle is assigned to you by Route Cabs admins. Please contact support for any maintenance requests.</p>
             </div>
           </div>
         </div>

@@ -134,7 +134,7 @@ export default function Signup({ onLoginSuccess, addToast }) {
 
           <div className="text-center mb-6">
             <Link to="/" className="inline-flex bg-slate-50 p-2 rounded-xl mb-3 border border-slate-100 shadow-sm cursor-pointer hover:bg-slate-100 transition-colors">
-              <img src="/logo.png" alt="CAB BAZAR logo" className="h-14 w-auto object-contain" />
+              <img src="/logo.png" alt="Route Cabs logo" className="h-14 w-auto object-contain" />
             </Link>
             <h2 className="text-2xl font-black text-slate-900 tracking-wide">Create Your Account</h2>
             <p className="text-slate-500 text-sm mt-1">Driver Partner Registration</p>
