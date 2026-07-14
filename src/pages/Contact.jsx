@@ -70,7 +70,7 @@ export default function Contact({ addToast }) {
                 <div>
                   <h4 className="font-bold text-slate-800 text-sm md:text-base">Phone Number</h4>
                   <p className="text-slate-500 text-sm mt-1">
-                    +91 9008204464
+                    +91 90082 04464
                   </p>
                 </div>
               </div>
