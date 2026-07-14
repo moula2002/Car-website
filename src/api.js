@@ -1,4 +1,4 @@
-const API_URL = 'https://car-taxi-server.onrender.com/api/v1';
+const API_URL = 'https://car-taxi-server-k7sa.onrender.com/api/v1';
 
 const apiFetch = async (endpoint, options = {}) => {
   const token = localStorage.getItem('car_bazar_session_token');
