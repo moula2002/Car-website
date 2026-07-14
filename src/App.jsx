@@ -11,6 +11,7 @@ import Signup from "./pages/Signup";
 import Toast from "./components/Toast";
 import api from "./api";
 import { LogOut } from "lucide-react";
+import FloatingWidget from "./components/FloatingWidget";
 
 // Dashboard Components
 import DriverLayout from "./components/DriverLayout";
@@ -157,6 +158,7 @@ export default function App() {
             </Routes>
           </main>
           <Footer />
+          <FloatingWidget addToast={addToast} />
         </div>
       )}
     </div>
