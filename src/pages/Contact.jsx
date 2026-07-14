@@ -44,9 +44,21 @@ export default function Contact({ addToast }) {
                   <MapPin size={20} />
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-800 text-sm md:text-base">Office Address</h4>
-                  <p className="text-slate-500 text-sm mt-1">
-                    100 Executive Boulevard, Suite 400, New York, NY 10001
+                  <h4 className="font-bold text-slate-800 text-sm md:text-base">Hyderabad Office</h4>
+                  <p className="text-slate-500 text-sm mt-1 leading-relaxed">
+                    8th Floor, Tirumala Manas Building, SR Nagar Main Rd, East Srinivas Nagar, Sanjeeva Reddy Nagar, Hyderabad, Telangana 500038
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-4 items-start">
+                <div className="bg-yellow-50 text-accent p-3 rounded-full flex-shrink-0">
+                  <MapPin size={20} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-800 text-sm md:text-base">Bangalore Office</h4>
+                  <p className="text-slate-500 text-sm mt-1 leading-relaxed">
+                    Bangalore, Karnataka
                   </p>
                 </div>
               </div>
@@ -58,7 +70,7 @@ export default function Contact({ addToast }) {
                 <div>
                   <h4 className="font-bold text-slate-800 text-sm md:text-base">Phone Number</h4>
                   <p className="text-slate-500 text-sm mt-1">
-                    +1 (555) 019-9000 (Operations)
+                    +91 9008204464
                   </p>
                 </div>
               </div>
@@ -76,17 +88,20 @@ export default function Contact({ addToast }) {
               </div>
             </div>
 
-            {/* Custom Google Map representation */}
+            {/* Google Map */}
             <div className="mt-10">
               <h4 className="font-bold text-slate-800 mb-4">Our Location</h4>
-              <div className="h-[220px] w-full rounded-2xl overflow-hidden border border-slate-200 relative bg-slate-200 flex items-center justify-center">
-                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#94a3b8_1px,transparent_0),radial-gradient(#94a3b8_1px,transparent_0)] [background-size:20px_20px] [background-position:0_0,10px_10px]"></div>
-                <div className="absolute w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
-                  <div className="w-5 h-5 rounded-full bg-blue-600 border-2 border-white shadow-md"></div>
-                </div>
-                <div className="absolute bottom-4 bg-white py-1.5 px-3 rounded-lg text-xs font-bold shadow-md">
-                  Route Cabs Corporate HQ
-                </div>
+              <div className="h-[300px] w-full rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
+                <iframe
+                  title="Route Cabs Office Location"
+                  width="100%"
+                  height="100%"
+                  frameBorder="0"
+                  scrolling="no"
+                  marginHeight="0"
+                  marginWidth="0"
+                  src="https://maps.google.com/maps?q=8th%20Floor,%20Tirumala%20Manas%20Building,%20SR%20Nagar%20Main%20Rd,%20Sanjeeva%20Reddy%20Nagar,%20Hyderabad,%20Telangana%20500038&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                ></iframe>
               </div>
             </div>
           </div>
