@@ -9,7 +9,7 @@ export default function Footer() {
           <div className="flex items-center gap-3 font-bold text-xl tracking-tight text-slate-800 mb-4">
             <img src="/logo.png" alt="Route Cabs logo" className="h-10 w-auto object-contain" />
             <span className="font-extrabold text-lg tracking-wide text-slate-900">
-              CAB <span className="text-secondary">BAZAR</span>
+              <span className="text-secondary">Route </span>Cabs
             </span>
           </div>
           <p className="text-sm leading-relaxed">

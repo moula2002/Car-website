@@ -170,7 +170,7 @@ export default function Signup({ onLoginSuccess, addToast }) {
                 <label className="text-xs font-bold text-slate-700">Email ID <span className="text-red-500">*</span></label>
                 <div className="relative">
                   <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"><User size={18} /></span>
-                  <input type="email" className="w-full py-2.5 pl-10 pr-4 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-secondary focus:ring-3 focus:ring-blue-500/15 transition-all" placeholder="driver@cabbazar.com" value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} required />
+                  <input type="email" className="w-full py-2.5 pl-10 pr-4 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-secondary focus:ring-3 focus:ring-blue-500/15 transition-all" placeholder="driver@routecabs.com" value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} required />
                 </div>
               </div>
 

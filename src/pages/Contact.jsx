@@ -30,7 +30,7 @@ export default function Contact({ addToast }) {
       {/* Main Section */}
       <section className="py-20 px-6 max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-          
+
           {/* Info Column */}
           <div>
             <h2 className="text-2xl font-bold text-slate-900 mb-6 font-sans">Contact Details</h2>
@@ -70,7 +70,7 @@ export default function Contact({ addToast }) {
                 <div>
                   <h4 className="font-bold text-slate-800 text-sm md:text-base">Email Address</h4>
                   <p className="text-slate-500 text-sm mt-1">
-                    support@cabbazar.com
+                    support@routecabs.com
                   </p>
                 </div>
               </div>
@@ -94,7 +94,7 @@ export default function Contact({ addToast }) {
           {/* Form Column */}
           <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
             <h2 className="text-2xl font-bold text-slate-900 mb-6 font-sans">Send a Message</h2>
-            
+
             <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold text-slate-700">Your Name <span className="text-red-500">*</span></label>
