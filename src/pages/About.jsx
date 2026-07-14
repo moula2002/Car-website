@@ -1,5 +1,6 @@
 import React from "react";
 import { Compass, Users } from "lucide-react";
+import aboutCarImage from "../assets/about-car.png";
 
 export default function About() {
   const stats = [
@@ -22,8 +23,8 @@ export default function About() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
           <div>
             <img 
-              src="https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=600&auto=format&fit=crop&q=80" 
-              alt="Office meeting" 
+              src={aboutCarImage} 
+              alt="Normal Car" 
               className="w-full rounded-2xl shadow-lg object-cover"
             />
           </div>
