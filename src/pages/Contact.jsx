@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Mail, Phone, MapPin, Send } from "lucide-react";
+import emailjs from '@emailjs/browser';
 
 export default function Contact({ addToast }) {
   const [formData, setFormData] = useState({
@@ -9,14 +10,40 @@ export default function Contact({ addToast }) {
     message: ""
   });
 
-  const handleSubmit = (e) => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.message) {
       if (addToast) addToast("Please fill in all required fields.", "error");
       return;
     }
-    if (addToast) addToast("Thank you for contacting us! We will get back to you shortly.", "success");
-    setFormData({ name: "", email: "", subject: "", message: "" });
+
+    setSubmitting(true);
+    try {
+      // REPLACE THESE WITH YOUR ACTUAL EMAILJS IDs
+      const serviceId = "service_aekk75i";
+      const templateId = "template_o82nm6c";
+      const publicKey = "4sr88YbmGBZd6hJdR";
+
+      // The keys in this object must match the variables in your EmailJS template!
+      const templateParams = {
+        from_name: formData.name,
+        from_email: formData.email,
+        subject: formData.subject || 'General Inquiry',
+        message: formData.message,
+      };
+
+      await emailjs.send(serviceId, templateId, templateParams, publicKey);
+
+      if (addToast) addToast("Thank you for contacting us! We will get back to you shortly.", "success");
+      setFormData({ name: "", email: "", subject: "", message: "" });
+    } catch (error) {
+      console.error("EmailJS Error:", error);
+      if (addToast) addToast("Failed to send message. Please try again later.", "error");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -82,7 +109,7 @@ export default function Contact({ addToast }) {
                 <div>
                   <h4 className="font-bold text-slate-800 text-sm md:text-base">Email Address</h4>
                   <p className="text-slate-500 text-sm mt-1">
-                    support@routecabs.com
+                    support@routecabs.in
                   </p>
                 </div>
               </div>
@@ -160,10 +187,11 @@ export default function Contact({ addToast }) {
 
               <button
                 type="submit"
-                className="bg-accent hover:bg-accent-hover text-slate-900 font-bold py-3 px-6 rounded-lg cursor-pointer flex items-center justify-center gap-2 mt-2 transition-colors border-2 border-accent hover:shadow-md"
+                disabled={submitting}
+                className="bg-accent hover:bg-accent-hover text-slate-900 font-bold py-3 px-6 rounded-lg cursor-pointer flex items-center justify-center gap-2 mt-2 transition-colors border-2 border-accent hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Send size={16} />
-                Send Message
+                {submitting ? "Sending..." : "Send Message"}
               </button>
             </form>
           </div>

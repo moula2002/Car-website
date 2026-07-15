@@ -16,6 +16,7 @@ export default function TripHistory({ driver }) {
   // Recharge form state
   const [rechargeAmount, setRechargeAmount] = useState("");
   const [transactionRef, setTransactionRef] = useState("");
+  const [paymentProofBase64, setPaymentProofBase64] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
   const [formError, setFormError] = useState("");
   const [submittingRecharge, setSubmittingRecharge] = useState(false);
@@ -56,6 +57,19 @@ export default function TripHistory({ driver }) {
     }
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPaymentProofBase64(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setPaymentProofBase64("");
+    }
+  };
+
   const handleRechargeSubmit = async (e) => {
     e.preventDefault();
     setFormError("");
@@ -74,11 +88,13 @@ export default function TripHistory({ driver }) {
     try {
       await api.post("/payments/recharge", {
         amount: Number(rechargeAmount),
-        transactionRef
+        transactionRef,
+        paymentProof: paymentProofBase64
       });
       setFormSuccess("Recharge request submitted successfully! Admin will verify and credit your wallet shortly.");
       setRechargeAmount("");
       setTransactionRef("");
+      setPaymentProofBase64("");
       // Refresh transactions list
       const txRes = await api.get("/payments/driver-transactions");
       setTransactions(txRes.data.data);
@@ -245,6 +261,17 @@ export default function TripHistory({ driver }) {
                     value={transactionRef}
                     onChange={(e) => setTransactionRef(e.target.value)}
                     className="w-full py-2 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:border-secondary"
+                    required
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-black text-slate-500 uppercase">Proof of Payment (Image) *</label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="w-full py-1.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:outline-none focus:border-secondary file:mr-4 file:py-1.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-slate-900 file:text-white hover:file:bg-slate-800 file:cursor-pointer cursor-pointer"
                     required
                   />
                 </div>
